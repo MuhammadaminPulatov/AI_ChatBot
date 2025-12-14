@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from dotenv import load_dotenv
 from google import genai
 
@@ -8,20 +9,22 @@ client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 chat = []
 
+timestamp = datetime.now().strftime("%Y.%m.%d-%H:%M:%S")
+filename = f"chat_{timestamp}.txt"
+
 print("Chat boshlandi. Chiqish uchun 'exit' deb yozing.\n")
 
 while True:
     message = input("Siz: ").strip()
 
     if message.lower() == "exit":
-        with open("chat_history.txt", "w", encoding="utf-8") as file:
-            for role, text in chat:
-                file.write(f"{role}: {text}\n")
-        print("Chat saqlandi. Dastur yopildi.")
+        print(f"Chat saqlandi: {filename}. Dastur yopildi.")
         break
 
+    chat.append(("SIZ", message))
+
     history = "\n".join([f"{role}: {text}" for role, text in chat])
-    prompt = history + f"\nUser: {message}"
+    prompt = history + f"\n\nIltimos, javobni faqat O'zbek tilida yozing."
 
     response = client.models.generate_content(
         model="gemini-2.5-flash",
@@ -30,6 +33,8 @@ while True:
 
     ai_text = response.text.strip()
     print("AI:", ai_text)
-
-    chat.append(("SIZ", message))
     chat.append(("AI", ai_text))
+
+    with open(filename, "w", encoding="utf-8") as file:
+        for role, text in chat:
+            file.write(f"{role}: {text}\n")
